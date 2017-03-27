@@ -10,10 +10,11 @@
 
 'use strict';
 
-// const Alexa = require('alexa-sdk');
+var Alexa = require('alexa-sdk');
 var request = require("request");
 const APP_ID = "amzn1.ask.skill.0dffa7c4-582a-4cf6-9920-040c634e8112";  // TODO replace with your app ID (OPTIONAL).
 
+var itemName;
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
@@ -40,6 +41,11 @@ exports.handler = function (event, context) {
                     context.succeed(buildResponse(sessionAttributes, speechletResponse));
                 });
         } else if (event.request.type === "IntentRequest") {
+            var itemSlot = event.request.intent.slots.debatetopic;
+            var itemName;
+            if (itemSlot && itemSlot.value) {
+                itemName = itemSlot.value.toLowerCase();
+            }
             onIntent(event.request,
                 event.session,
                 function callback(sessionAttributes, speechletResponse) {
@@ -78,7 +84,7 @@ function onIntent(intentRequest, session, callback) {
 
     // dispatch custom intents to handlers here
     if (intentName == "DebateAboutIntent") {
-        handleGetInfoIntent(intent, session, callback)
+        handleDebateIntent(intent, session, callback)
     } else {
          throw "Invalid intent"
     }
@@ -95,9 +101,9 @@ function onSessionEnded(sessionEndedRequest, session) {
 // ------- Skill specific logic -------
 
 function getWelcomeResponse(callback) {
-    var speechOutput = "Welcome! Do you want to hear about some facts?"
+    var speechOutput = "Welcome! What would you like to debate about?"
 
-    var reprompt = "Do you want to hear about some facts?"
+    var reprompt = "What would you like to debate about?"
 
     var header = "Get Info"
 
@@ -112,8 +118,7 @@ function getWelcomeResponse(callback) {
 
 }
 
-function handleGetInfoIntent(intent, session, callback) {
-
+function handleDebateIntent(intent, session, callback) {
     var speechOutput = "We have an error"
 
     getJSON(function(data) {
@@ -192,7 +197,7 @@ function buildSpeechletResponseWithoutCard(output, repromptText, shouldEndSessio
     return {
         outputSpeech: {
             type: "PlainText",
-            text: output
+            text: itemName
         },
         reprompt: {
             outputSpeech: {
